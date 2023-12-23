@@ -1,0 +1,30 @@
+export const DummyStory = [
+    {
+        id:"1",
+        stories:"https://media.istockphoto.com/id/1323034211/vector/happy-smiling-female-character-is-enjoing-her-coffee.jpg?s=2048x2048&w=is&k=20&c=Q4fkS_GmJbNtuddg_Zj3DpOC8L754wYT2OQiBOrctB0="
+    },
+    {
+        id:"1",
+        stories:"https://media.istockphoto.com/id/1137896416/vector/girl-with-a-cup-of-tea.jpg?s=2048x2048&w=is&k=20&c=IOUcS81jIrUopcVFbWwYVZSIpkebs192ndtnyihRW38="
+    },
+    {
+        id:"1",
+        stories:"https://cdn.pixabay.com/photo/2023/09/24/14/05/dog-8272860_640.jpg"
+    },
+    {
+        id:"1",
+        stories:"https://cdn.pixabay.com/photo/2023/12/12/18/10/duck-8445696_640.jpg"
+    },
+    {
+        id:"1",
+        stories:"https://cdn.pixabay.com/photo/2023/12/04/16/12/berlin-8429780_1280.jpg"
+    },
+    {
+        id:"1",
+        stories:"https://cdn.pixabay.com/photo/2023/09/28/17/10/cat-8282097_1280.jpg"
+    },
+    {
+        id:"1",
+        stories:"https://cdn.pixabay.com/photo/2023/12/04/16/12/berlin-8429780_1280.jpg"
+    }
+]
