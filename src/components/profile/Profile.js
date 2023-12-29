@@ -1,21 +1,78 @@
-import React, { useState } from "react";
-import { BsArrowLeft, BsCake2, BsCheck2, BsPencil } from "react-icons/bs";
+import React, { useEffect, useState } from "react";
+import { BsArrowLeft, BsCheck2, BsPencil } from "react-icons/bs";
 import { useNavigate } from "react-router-dom";
+import { httpsService, TOKEN } from "../../config/Api";
+import { Constants } from "../../config/Constants";
+import axios from "axios";
 
-function Profile({ setIsUser }) {
+function Profile() {
+  const navigate = useNavigate();
   const [flag, setFlag] = useState();
-  const [inputValue, setInputValue] = useState(null)
+  const [inputValue, setInputValue] = useState("");
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [update, setUpdate] = useState();
 
-  const handleInputValue = () =>{
-    
+  const token = localStorage.getItem("token");
+  // const token = TOKEN;
+
+  // console.log("token : ", token);
+
+  const handleUpdateProfile = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.put(
+        "http://localhost:8080/api/user/update",
+        {
+          displayName: inputValue,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setUpdate(response.message)
+      console.log("Update Profile Response:", response.data);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/api/user/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [token]);
+
+  if (loading) {
+    return <p>Loading...</p>;
   }
-  
+
   return (
     <div className="w-full h-full">
       <div className="flex items-center space-x-10 bg-[#008069] text-white pt-16 px-10 pb-5">
         <BsArrowLeft
           className="cursor-pointer text-2xl font-bold"
-          onClick={() => setIsUser(false)}
+          onClick={() => navigate(-1)}
         />
         <p className="cursor-pointer font-semibold">Profile</p>
       </div>
@@ -31,16 +88,32 @@ function Profile({ setIsUser }) {
       </div>
       {/* name section  */}
       <div className="p-3">
-        <p className="py-3">Your Name</p>
+        <p className="py-3">{update ? update :data.displayName}</p>
         {!flag ? (
           <div className="w-fil; flex justify-between items-center">
-            <p className="py-3">{inputValue || "username"}</p>
-            <BsPencil className="cursor-pointer" onClick={()=> setFlag(!flag) }/>
+            <p className="py-3">{inputValue || "display name"}</p>
+            <BsPencil
+              className="cursor-pointer"
+              onClick={() => {
+                setFlag(!flag);
+              }}
+            />
           </div>
         ) : (
           <div className="w-fil; flex justify-between items-center">
-            <input value={inputValue} onChange={(e)=>setInputValue(e.target.value)} className="w-[80%] outline-none border-b-2 border-blue-700 p-2"/>
-            <BsCheck2 className="cursor-pointer text-2xl" onClick={()=> setFlag(false)} />
+            <input
+              name="displayName"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="w-[80%] outline-none border-b-2 border-blue-700 p-2"
+            />
+            <BsCheck2
+              className="cursor-pointer text-2xl"
+              onClick={() => {
+                setFlag(false);
+                handleUpdateProfile();
+              }}
+            />
           </div>
         )}
       </div>

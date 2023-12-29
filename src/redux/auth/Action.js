@@ -18,53 +18,23 @@ export const register = (data)=> async(dispatch) =>{
     }
 }
 
-// export const login = (data)=> async(dispatch) =>{
-//     try {
-//         const res = await fetch(`${BASE_API_URL}/api/auth/login`,{
-//             method:"POST",
-//             headers:{
-//                 "Content-Type" : "application/json"
-//             },
-//             body:JSON.stringify(data)
-//         })
-//         console.log("data : ", data )
-//         const resData = await res.json()
-//         dispatch({type:LOGIN, payload:resData})
-//         console.log("resData : ", resData )
-//     } catch (error) {
-//         console.log("catch error ", error)
-//     }
-// }
-
-// Assuming you have already defined the LOGIN action type and BASE_API_URL
-
-export const login = (data) => async (dispatch) => {
+export const login = (data)=> async(dispatch) =>{
     try {
-      const res = await fetch(`${BASE_API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-  
-      const resData = await res.json();
-  
-      // Assuming the structure of your API response contains a 'jwt' property
-      localStorage.setItem("token", resData?.jwt);
-  
-      // Dispatch the LOGIN action with the response data
-      dispatch({ type: LOGIN, payload: resData });
-  
-      // Handle success, e.g., show a success message to the user
-      console.log("Success:", resData?.jwt);
-  
+        const res = await fetch(`${BASE_API_URL}/api/auth/login`,{
+            method:"POST",
+            headers:{
+                "Content-Type" : "application/json"
+            },
+            body:JSON.stringify(data)
+        })
+        console.log("data : ", data )
+        const resData = await res.json()
+        dispatch({type:LOGIN, payload:resData})
+        console.log("resData : ", resData )
     } catch (error) {
-      // Handle errors, e.g., show an error message to the user
-      console.error('Error:', error);
+        console.log("catch error ", error)
     }
-  };
-  
+}
 
 export const currentUser = (token)=> async(dispatch) =>{
     try {

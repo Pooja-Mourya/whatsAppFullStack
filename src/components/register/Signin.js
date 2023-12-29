@@ -3,26 +3,43 @@ import { green } from "@mui/material/colors";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { httpsService } from "../../config/Api";
+import { Constants } from "../../config/Constants";
+import axios from "axios";
 
 function Signin() {
   const navigate = useNavigate();
   const [inputData, setInputData] = useState({ email: "", password: "" });
   const [openSnackBar, setOpenSnackBar] = useState(false);
+  const [userToken, setUserToken] = useState();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setOpenSnackBar(true);
-    httpsService({
-      method: "POST",
-      path: "/api/auth/login",
-      data: inputData,
-      success: (result) => {
-        localStorage.setItem("token", result?.jwt);
-        console.log(result)},
-      error:(error)=>console.log("error : " , error)
-    });
-    setInputData({ email: "", password: "" });
-    navigate("/");
+    // httpsService({
+    //   method: "POST",
+    //   path: Constants.apiEndPoint.signIn,
+    //   data: inputData,
+    //   success: (result) => {
+    //     localStorage.setItem("token", result?.jwt);
+    //     setUserToken(result);
+    //   },
+    //   error: (error) => console.log("error : ", error),
+    // });
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/auth/login",
+        { inputData }
+      );
+      // console.log("response token : ", response.data.jwt);
+      localStorage.setItem("token", response.data.jwt);
+      setUserToken(response.data.jwt);
+      setInputData({ email: "", password: "" });
+     
+        navigate("/");
+      
+    } catch (error) {
+      console.log("error : ", error);
+    }
   };
 
   const handleChange = (e) => {
@@ -81,19 +98,35 @@ function Signin() {
           </form>
         </div>
       </div>
-      <Snackbar
-        open={openSnackBar}
-        autoHideDuration={6000}
-        onClose={handleSnackBar}
-      >
-        <Alert
+      {userToken ? (
+        <Snackbar
+          open={openSnackBar}
+          autoHideDuration={6000}
           onClose={handleSnackBar}
-          severity="success"
-          sx={{ width: "100%" }}
         >
-          This is a success message!
-        </Alert>
-      </Snackbar>
+          <Alert
+            onClose={handleSnackBar}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            This is a success message!
+          </Alert>
+        </Snackbar>
+      ) : (
+        <Snackbar
+          open={openSnackBar}
+          autoHideDuration={6000}
+          onClose={handleSnackBar}
+        >
+          <Alert
+            onClose={handleSnackBar}
+            severity="warning"
+            sx={{ width: "100%" }}
+          >
+            This is a warning message!
+          </Alert>
+        </Snackbar>
+      )}
     </div>
   );
 }

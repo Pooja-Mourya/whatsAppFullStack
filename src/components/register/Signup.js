@@ -1,8 +1,9 @@
 import { Alert, Button, Snackbar } from "@mui/material";
 import { green } from "@mui/material/colors";
-import React, {useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { httpsService } from "../../config/Api"
+import { httpsService } from "../../config/Api";
+import axios from "axios";
 
 function Signup() {
   const navigate = useNavigate();
@@ -11,15 +12,40 @@ function Signup() {
     password: "",
     email: "",
   });
+  const [loading, setLoading] = useState(false);
   const [openSnackBar, setOpenSnackBar] = useState(false);
-
-  const handleSubmit = (e) => {
+  const [data, setData] = useState();
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("handle submit ", inputData);
+    // console.log("handle submit ", inputData);
     setOpenSnackBar(true);
-    httpsService({method:"POST", path:"/api/auth/signup", data:inputData})
-    setInputData({ username: "", password: "", email: "" });
-    navigate("/signIn")
+    // httpsService({
+    //   method: "POST",
+    //   path: "/api/auth/signup",
+    //   data: inputData,
+    //   success: (s) => {
+    //     console.log("success : ", s);
+    //     setData(s);
+    //   },
+    //   error: (e) => {
+    //     console.log("error : ", e);
+    //   },
+    // });
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        "http://localhost:8080/api/auth/signup",
+        { ...inputData }
+      );
+      console.log("signup response : ", response);
+      setLoading(false);
+      setInputData({ email: "", password: "", username: "" });
+      if (response) {
+        navigate("/signIn");
+      }
+    } catch (error) {
+      console.log("error : ", error);
+    }
   };
 
   const handleChange = (e) => {
@@ -94,19 +120,35 @@ function Signup() {
           </form>
         </div>
       </div>
-      <Snackbar
-        open={openSnackBar}
-        autoHideDuration={6000}
-        onClose={handleSnackBar}
-      >
-        <Alert
+      {data ? (
+        <Snackbar
+          open={openSnackBar}
+          autoHideDuration={6000}
           onClose={handleSnackBar}
-          severity="success"
-          sx={{ width: "100%" }}
         >
-          User registered successfully!
-        </Alert>
-      </Snackbar>
+          <Alert
+            onClose={handleSnackBar}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            User registered successfully!
+          </Alert>
+        </Snackbar>
+      ) : (
+        <Snackbar
+          open={openSnackBar}
+          autoHideDuration={6000}
+          onClose={handleSnackBar}
+        >
+          <Alert
+            onClose={handleSnackBar}
+            severity="warning"
+            sx={{ width: "100%" }}
+          >
+            User registration warning!
+          </Alert>
+        </Snackbar>
+      )}
     </div>
   );
 }

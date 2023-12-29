@@ -84,7 +84,7 @@ function HomePage() {
                         "aria-labelledby": "basic-button",
                       }}
                     >
-                      <MenuItem onClick={handleClose}>Profile</MenuItem>
+                      <MenuItem onClick={()=>navigation("/profile")}>Profile</MenuItem>
                       <MenuItem onClick={handleCreateGroup}>Create Group</MenuItem>
                       <MenuItem onClick={handleClose}>Logout</MenuItem>
                     </Menu>

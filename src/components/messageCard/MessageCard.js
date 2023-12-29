@@ -13,9 +13,11 @@
 // }
 
 // export default MessageCard;
-import React from "react";
 
+import React from "react";
 function MessageCard({ isReqUserMessage, content }) {
+
+  
   return (
     <div
       className={`py-2 px-2 rounded-md max-w-[100%] ${

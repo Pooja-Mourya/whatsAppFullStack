@@ -6,6 +6,7 @@ import StatusView from "./components/status/StatusView";
 import Signin from "./components/register/Signin";
 import Signup from "./components/register/Signup";
 import { useEffect } from "react";
+import Profile from "./components/profile/Profile";
 
 function App() {
   const token = localStorage.getItem("token");
@@ -13,6 +14,8 @@ function App() {
   useEffect(() => {
     if (!token) {
       navigate("/signIn");
+    }else{
+      navigate("/")
     }
   }, [token]);
   return (
@@ -22,6 +25,7 @@ function App() {
       <Route path="/status/:userId" element={<StatusView />} />
       <Route path="/signIn" element={<Signin />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/profile" element={<Profile />} />
     </Routes>
   );
 }
