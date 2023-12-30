@@ -1,4 +1,5 @@
-import { CREATE_CHAT } from "./ActionType"
+import axios from "axios"
+import { CHAT_USERS, CREATE_CHAT, CREATE_CHAT_GROUP } from "./ActionType"
 
 export const createChat = (chatData)=>async(dispatch) =>{
     try {
@@ -21,7 +22,7 @@ export const createChat = (chatData)=>async(dispatch) =>{
 
 export const createGroup = (chatData)=>async(dispatch) =>{
     try {
-        const res = await fetch("http://localhost:8080/api/chat/group",{
+        const res = await fetch("http://localhost:8080/api/chats/group",{
             method:"POST",
             headers:{
                 "Content-Type" : "application/json",
@@ -40,7 +41,7 @@ export const createGroup = (chatData)=>async(dispatch) =>{
 
 export const createUserChat = (chatData)=>async(dispatch) =>{
     try {
-        const res = await fetch("http://localhost:8080/api/chat/user",{
+        const res = await fetch("http://localhost:8080/api/chats/user",{
             method:"GET",
             headers:{
                 "Content-Type" : "application/json",
@@ -52,6 +53,10 @@ export const createUserChat = (chatData)=>async(dispatch) =>{
     console.log("create chat ", data)
     dispatch({type:CHAT_USERS, payload:data})
     } catch (error) {
-        
+        console.log("error : " , error)
     }
 }
+
+
+  
+  

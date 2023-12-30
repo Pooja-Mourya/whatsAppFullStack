@@ -1,14 +1,14 @@
 import React from "react";
 
-function ChatCard() {
+function ChatCard({data}) {
   return (
     <div className="flex item-center justify-center py-2 group cursor-pointer">
       <div className="W-[20%]">
-        <img className="h-14 w-14 rounded-full" src="https://cdn.pixabay.com/photo/2014/03/25/15/24/santa-claus-296717_640.png" />
-      </div>
+        <img className="h-14 w-14 rounded-full" src={data.profilePicture || "https://cdn.pixabay.com/photo/2012/04/26/19/43/profile-42914_1280.png" } />
+        </div>
       <div className="pl-5 w-[80%]">
         <div className="flex justify-between items-center">
-          <p className="text-lg">Emily</p>
+          <p className="text-lg">{data.username}</p>
           <p className="text-sm">06:30</p>
         </div>
         <div className="flex justify-between items-center">

@@ -1,7 +1,5 @@
-import React, { useState } from "react";
-import {
-  TbCircleDotted,
-} from "react-icons/tb";
+import React, { useEffect, useState } from "react";
+import { TbCircleDotted } from "react-icons/tb";
 import { BiCommentDetail } from "react-icons/bi";
 import { AiOutlineSearch } from "react-icons/ai";
 import { BsEmojiLaughing, BsFilter, BsMicFill } from "react-icons/bs";
@@ -13,19 +11,48 @@ import Profile from "./profile/Profile";
 import { useNavigate } from "react-router-dom";
 import { MenuItem, Menu } from "@mui/material";
 import CreateGroup from "./group/CreateGroup";
+import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { currentUser, searchUser } from "../redux/auth/Action";
+import { createUserChat } from "../redux/chat/Action";
 
 function HomePage() {
   const navigation = useNavigate();
+  const dispatch = useDispatch();
+  const {auth , chat} = useSelector((state) => state);
+  const token = localStorage.getItem("token");
   const [querys, setQuerys] = useState("");
   const [currentChat, setCurrentChat] = useState(false);
   const [content, setContent] = useState("");
   const [isUser, setIsUser] = useState(null);
   const [isGroup, setIsGroup] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState("")
 
-  const handleCurrentChat = () => {
+  const handleCurrentChat = async (userId) => {
     setCurrentChat(true);
+    // dispatch(createChat({token , data:{userId}}))
+    try {
+      await axios.post(
+        "http://localhost:8080/api/chats/single",
+        { userId },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
+  const handleSearch = (keyword) => {
+    setLoading(true);
+    dispatch(searchUser({ keyword, token }));
+    setLoading(false);
+  };
   const handleUserProfile = () => {
     setIsUser(true);
   };
@@ -40,9 +67,37 @@ function HomePage() {
     setAnchorEl(null);
   };
 
-  const handleCreateGroup = () =>{
-    setIsGroup(true)
-  }
+  const handleCreateGroup = () => {
+    setIsGroup(true);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/api/chats/user",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log(response.data);
+        setData(response.data)
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [token]);
+ 
+  useEffect(()=>{
+    dispatch(currentUser(token))
+  },[dispatch])
+
   return (
     <div>
       <div className="py-14 bg-[#00a884] w-full"></div>
@@ -50,7 +105,7 @@ function HomePage() {
         <div className="left w-[30%] bg-[#e8e9ec] h-full">
           <div className="w-full">
             {isUser && <Profile setIsUser={(e) => setIsUser(e)} />}
-            {isGroup && <CreateGroup/>}
+            {isGroup && <CreateGroup />}
             {!isUser && !isGroup && (
               <div className="flex justify-between items-center p-3">
                 <div
@@ -84,8 +139,12 @@ function HomePage() {
                         "aria-labelledby": "basic-button",
                       }}
                     >
-                      <MenuItem onClick={()=>navigation("/profile")}>Profile</MenuItem>
-                      <MenuItem onClick={handleCreateGroup}>Create Group</MenuItem>
+                      <MenuItem onClick={() => navigation("/profile")}>
+                        Profile
+                      </MenuItem>
+                      <MenuItem onClick={handleCreateGroup}>
+                        Create Group
+                      </MenuItem>
                       <MenuItem onClick={handleClose}>Logout</MenuItem>
                     </Menu>
                   </div>
@@ -99,7 +158,10 @@ function HomePage() {
                 type="text"
                 placeholder="Search or start new Chat"
                 value={querys}
-                onChange={(e) => setQuerys(e.target.value)}
+                onChange={(e) => {
+                  setQuerys(e.target.value);
+                  handleSearch(e.target.value);
+                }}
               />
               <AiOutlineSearch className="left-5 top-7 absolute" />
               <div>
@@ -108,13 +170,17 @@ function HomePage() {
             </div>
             {/* all user who is in the chat App */}
             <div className="bg-white overflow-y-scroll h-[76.8vh] px-3">
+              {loading && <p>Loading...</p>}
               {querys &&
-                [1, 1, 1, 1, 1, 1, 1, 1, ,].map((item) => (
-                  <div onClick={handleCurrentChat}>
-                    <hr />
-                    <ChatCard />
-                  </div>
-                ))}
+                auth?.searchUser?.map((item, index) => {
+                  // console.log(item);
+                  return (
+                    <div key={index} onClick={() => handleCurrentChat(item.id)}>
+                      <hr />
+                      <ChatCard data={item} />
+                    </div>
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -158,10 +224,10 @@ function HomePage() {
               {/* message section */}
               <div className="px-10 h-[85vh] overflow-y-scroll w-[100%] bg-blue-200">
                 <div className="space-y-1 flex flex-col justify-center mt-20 py-2">
-                  {[1, 1, 1, 1, 1, 1].map((item, i) => (
+                  {data.map((item, i) => (
                     <MessageCard
                       key={i}
-                      content={"this is static message "}
+                      content={item}
                       isReqUserMessage={i % 2 === 0}
                     />
                   ))}

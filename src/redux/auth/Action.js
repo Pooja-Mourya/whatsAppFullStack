@@ -20,7 +20,7 @@ export const register = (data)=> async(dispatch) =>{
 
 export const login = (data)=> async(dispatch) =>{
     try {
-        const res = await fetch(`${BASE_API_URL}/api/auth/login`,{
+        const res = await fetch("http://localhost:8080/api/auth/login",{
             method:"POST",
             headers:{
                 "Content-Type" : "application/json"
@@ -30,7 +30,7 @@ export const login = (data)=> async(dispatch) =>{
         console.log("data : ", data )
         const resData = await res.json()
         dispatch({type:LOGIN, payload:resData})
-        console.log("resData : ", resData )
+        console.log("resData : ", resData)
     } catch (error) {
         console.log("catch error ", error)
     }
@@ -38,7 +38,7 @@ export const login = (data)=> async(dispatch) =>{
 
 export const currentUser = (token)=> async(dispatch) =>{
     try {
-        const res = await fetch(`${BASE_API_URL}/user/profile`,{
+        const res = await fetch("http://localhost:8080/api/user/profile",{
             method:"GET",
             headers:{
                 "Content-Type" : "application/json",
@@ -53,12 +53,13 @@ export const currentUser = (token)=> async(dispatch) =>{
 }
 
 export const searchUser = (data)=> async(dispatch) =>{
+    // console.log("user data " , data)
     try {
-        const res = await fetch(`${BASE_API_URL}/users/search?name=${data.keyword}`,{
+        const res = await fetch(`http://localhost:8080/api/user/search?keyword=${data.keyword}`,{
             method:"GET",
             headers:{
                 "Content-Type" : "application/json",
-                Authorization : `Bearer ${data.token}`
+                Authorization : `Bearer ${data.jwt}`
             },
         })
         const resData = await res.json()
