@@ -17,25 +17,12 @@ function Signup() {
   const [data, setData] = useState();
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // console.log("handle submit ", inputData);
     setOpenSnackBar(true);
-    // httpsService({
-    //   method: "POST",
-    //   path: "/api/auth/signup",
-    //   data: inputData,
-    //   success: (s) => {
-    //     console.log("success : ", s);
-    //     setData(s);
-    //   },
-    //   error: (e) => {
-    //     console.log("error : ", e);
-    //   },
-    // });
     try {
       setLoading(true);
       const response = await axios.post(
         "http://localhost:8080/api/auth/signup",
-        { ...inputData }
+        { ...inputData, }
       );
       console.log("signup response : ", response);
       setLoading(false);
@@ -57,10 +44,12 @@ function Signup() {
     setOpenSnackBar(!openSnackBar);
   };
 
+  loading && <p>Loading...</p>
   return (
     <div>
       <div className="flex justify-center h-screen items-center">
         <div className="w-[30%] p-10 shadow-md bg-white">
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <p className="md-2">User Name</p>

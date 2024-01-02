@@ -8,7 +8,7 @@ function MessageCard({ isReqUserMessage, content }) {
       }`}
     >
       <p className={`${isReqUserMessage ? "text-black" : "text-green-700"}`}>
-        {content.name}
+        {content.name || "this is dynamic message"}
       </p>
     </div>
   );

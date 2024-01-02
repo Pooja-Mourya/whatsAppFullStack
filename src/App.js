@@ -7,9 +7,11 @@ import Signin from "./components/register/Signin";
 import Signup from "./components/register/Signup";
 import { useEffect } from "react";
 import Profile from "./components/profile/Profile";
+import { TOKEN } from "./config/Api";
 
 function App() {
-  const token = localStorage.getItem("token");
+  // const token = localStorage.getItem("token");
+  const token = TOKEN
   const navigate = useNavigate();
   useEffect(() => {
     if (!token) {

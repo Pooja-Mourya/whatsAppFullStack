@@ -14,38 +14,44 @@ import CreateGroup from "./group/CreateGroup";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { currentUser, searchUser } from "../redux/auth/Action";
-import { createUserChat } from "../redux/chat/Action";
+import { createChat, createUserChat } from "../redux/chat/Action";
+import { TOKEN } from "../config/Api";
 
 function HomePage() {
   const navigation = useNavigate();
   const dispatch = useDispatch();
-  const {auth , chat} = useSelector((state) => state);
-  const token = localStorage.getItem("token");
+  const { auth, chat } = useSelector((state) => state);
+  // const token = localStorage.getItem("token");
+  const token = TOKEN;
   const [querys, setQuerys] = useState("");
   const [currentChat, setCurrentChat] = useState(false);
   const [content, setContent] = useState("");
   const [isUser, setIsUser] = useState(null);
   const [isGroup, setIsGroup] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState("")
+  const [data, setData] = useState([]);
+  const [chatData, setChatData] = useState(null);
+  const [currUser, setCurrUser] = useState({});
+  const [myMessage, setMyMessage] = useState([])
 
-  const handleCurrentChat = async (userId) => {
+  const handleCurrentChat = async () => {
     setCurrentChat(true);
-    // dispatch(createChat({token , data:{userId}}))
-    try {
-      await axios.post(
-        "http://localhost:8080/api/chats/single",
-        { userId },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-    } catch (error) {
-      console.error("Error:", error);
-    }
+    // try {
+    //   const response = await axios.get(
+    //     "http://localhost:8080/api/chats/single",
+
+    //     {
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //         Authorization: `Bearer ${token}`,
+    //       },
+    //     }
+    //   );
+    //   // console.log("chat user response : " , response.data)
+
+    // } catch (error) {
+    //   console.error("Error:", error);
+    // }
   };
 
   const handleSearch = (keyword) => {
@@ -53,10 +59,28 @@ function HomePage() {
     dispatch(searchUser({ keyword, token }));
     setLoading(false);
   };
+
   const handleUserProfile = () => {
     setIsUser(true);
   };
-  const handleCreateNewMessage = () => {};
+
+  const handleCreateNewMessage = async () => {
+    try {
+      await axios.get(
+        "http://localhost:8080/api/message/create",
+        { content: content },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      // console.log("chat user response : " , response.data)
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -72,6 +96,28 @@ function HomePage() {
   };
 
   useEffect(() => {
+    const allMessage = async () => {
+      if(currentChat.id){try {
+        const response = await axios.get(
+          `http://localhost:8080/api/message/chat/${currentChat.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setMyMessage(response);
+        // console.log("user chat details : ", response.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        // setLoading(false);
+      }}
+    };
+    allMessage();
+  }, [myMessage]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
@@ -83,7 +129,7 @@ function HomePage() {
           }
         );
         console.log(response.data);
-        setData(response.data)
+        setData(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -93,11 +139,36 @@ function HomePage() {
 
     fetchData();
   }, [token]);
- 
-  useEffect(()=>{
-    dispatch(currentUser(token))
-  },[dispatch])
 
+  useEffect(() => {
+    const userFetchData = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/api/user/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log(response.data);
+        setCurrUser(response.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        // setLoading(false);
+      }
+    };
+
+    userFetchData();
+  }, [token]);
+
+  const handleUserCurrentChat = (item) => {
+    console.log(item);
+    setChatData(item);
+  };
+
+  console.log("myMessage : " , myMessage )
   return (
     <div>
       <div className="py-14 bg-[#00a884] w-full"></div>
@@ -114,10 +185,13 @@ function HomePage() {
                 >
                   <img
                     className="rounded-full w-10 h-10 cursor-pointer"
-                    src="https://cdn.pixabay.com/photo/2023/12/07/23/12/black-spotted-longhorn-beetle-8436478_1280.jpg"
+                    src={
+                      currUser.profilePicture ||
+                      "https://cdn.pixabay.com/photo/2023/12/07/23/12/black-spotted-longhorn-beetle-8436478_1280.jpg"
+                    }
                     alt=""
                   />
-                  <p>Pooja Mourya</p>
+                  <p>{currUser.username}</p>
                 </div>
                 <div className="space-x-3 text-2xl flex">
                   <TbCircleDotted onClick={() => navigation("/status")} />
@@ -168,23 +242,84 @@ function HomePage() {
                 <BsFilter className="ml-4 text-3xl" />
               </div>
             </div>
+
             {/* all user who is in the chat App */}
             <div className="bg-white overflow-y-scroll h-[76.8vh] px-3">
               {loading && <p>Loading...</p>}
-              {querys &&
-                auth?.searchUser?.map((item, index) => {
-                  // console.log(item);
-                  return (
-                    <div key={index} onClick={() => handleCurrentChat(item.id)}>
+              {querys && data
+                ? auth?.searchUser?.map((item, index) => {
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          console.log("user search------ : ", item);
+                          handleCurrentChat();
+                        }}
+                      >
+                        <hr />
+                        <ChatCard
+                          name={item.name}
+                          displayImage={item.profilePicture}
+                        />
+                      </div>
+                    );
+                  })
+                : !querys &&
+                  data.map((item, index) => (
+                    <div
+                      key={index}
+                      onClick={() => {
+                        console.log("user data ------ : ", item);
+                        handleUserCurrentChat(item);
+                        handleCurrentChat();
+                      }}
+                    >
                       <hr />
-                      <ChatCard data={item} />
+                      <ChatCard
+                        name={item.name}
+                        displayImage={item.profilePicture}
+                      />
                     </div>
-                  );
+                  ))}
+
+              {currentChat?.length > 0 &&
+                !querys &&
+                currentChat.map((item, index) => {
+                  <div
+                    key={index}
+                    onClick={(item) => {
+                      console.log("current------ : ", item);
+                      handleUserCurrentChat(item);
+                      handleCurrentChat();
+                    }}
+                  >
+                    <hr />
+                    {item.isGroup ? (
+                      <ChatCard
+                        name={item.username || "user name"}
+                        displayImage={item.profilePicture || ""}
+                      />
+                    ) : (
+                      <ChatCard
+                        name={
+                          currUser.id !== item.users[0].id
+                            ? item?.users[0].username
+                            : item?.users[0].username
+                        }
+                        displayImage={
+                          currUser.id !== item.users[0].id
+                            ? item?.users[0].profilePicture ||
+                              "https://cdn.pixabay.com/photo/2016/08/31/11/54/icon-1633249_1280.png"
+                            : item?.users[1].profilePicture ||
+                              "https://cdn.pixabay.com/photo/2017/03/08/14/20/flat-2126880_1280.png"
+                        }
+                      />
+                    )}
+                  </div>;
                 })}
             </div>
           </div>
         </div>
-
         <div className="right flex justify-center items-center w-[70%]">
           {!currentChat && (
             <div className="w-[60%] flex flex-col items-center">
@@ -210,10 +345,20 @@ function HomePage() {
                   <div className="py-3 space-x-4 flex px-3">
                     <img
                       className="w-10 h-10 rounded-full"
-                      src="https://cdn.pixabay.com/photo/2016/06/15/16/16/man-1459246_640.png"
+                      src={
+                        currUser.id !== chatData?.users[0].id
+                          ? chatData?.users[0]?.profilePicture
+                          : chatData?.users[1]?.profilePicture ||
+                            "https://cdn.pixabay.com/photo/2016/06/15/16/16/man-1459246_640.png"
+                      }
                       alt="/"
                     />
-                    <p>Sanshkar</p>
+                    <p>
+                      {currUser.id !== chatData?.users[0].id
+                        ? chatData?.users[0]?.username
+                        : chatData?.users[1]?.username ||
+                          " Chat user name not found"}
+                    </p>
                   </div>
                   <div className="py-3 space-x-4 items-center px-3">
                     <AiOutlineSearch onClick={() => navigation("/status")} />
@@ -224,7 +369,7 @@ function HomePage() {
               {/* message section */}
               <div className="px-10 h-[85vh] overflow-y-scroll w-[100%] bg-blue-200">
                 <div className="space-y-1 flex flex-col justify-center mt-20 py-2">
-                  {data.map((item, i) => (
+                  {[1,1,1,1,1,1,1].map((item, i) => (
                     <MessageCard
                       key={i}
                       content={item}
@@ -263,3 +408,5 @@ function HomePage() {
 }
 
 export default HomePage;
+
+// legle@newrise.in

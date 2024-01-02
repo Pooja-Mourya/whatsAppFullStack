@@ -55,7 +55,8 @@ function Signin() {
     <div>
       <div className="flex justify-center h-screen items-center">
         <div className="w-[30%] p-10 shadow-md bg-white">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={inputData.email && inputData.password ? handleSubmit : (e) => { e.preventDefault(); alert("Enter user credential"); }} className="space-y-5">
+ 
             <div>
               <p className="md-2">Email</p>
               <input
