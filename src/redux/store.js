@@ -1,13 +1,23 @@
-import { applyMiddleware, combineReducers, legacy_createStore } from "redux";
-import { authReducer } from "./auth/Reducer";
-import { thunk } from "redux-thunk";
-import { chatReducer } from "./chat/Reducer";
-import { messageReducer } from "./message/Reducer";
+import { configureStore } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/query";
+import { UserService, userProfileApi } from "./apiServices/UserService";
+import { AuthService } from "./apiServices/AuthService";
+import { fileUploadApi } from "./apiServices/UploadService";
 
-const rootReducer = combineReducers({
-  auth: authReducer,
-  chat: chatReducer,
-  message: messageReducer,
+export const store = configureStore({
+  reducer: {
+    [AuthService.reducerPath]: AuthService.reducer,
+    [UserService.reducerPath]: UserService.reducer,
+    [userProfileApi.reducerPath]: userProfileApi.reducer,
+    [fileUploadApi.reducerPath]: fileUploadApi.reducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(
+      AuthService.middleware,
+      UserService.middleware,
+      userProfileApi.middleware,
+      fileUploadApi.middleware
+    ),
 });
 
-export const store = legacy_createStore(rootReducer, applyMiddleware(thunk));
+setupListeners(store.dispatch);

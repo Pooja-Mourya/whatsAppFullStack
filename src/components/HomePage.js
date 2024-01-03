@@ -12,51 +12,57 @@ import { useNavigate } from "react-router-dom";
 import { MenuItem, Menu } from "@mui/material";
 import CreateGroup from "./group/CreateGroup";
 import axios from "axios";
-import { useDispatch, useSelector } from "react-redux";
-import { currentUser, searchUser } from "../redux/auth/Action";
-import { createChat, createUserChat } from "../redux/chat/Action";
 import { TOKEN } from "../config/Api";
+import {
+  useDeleteUserMutation,
+  useGetUserQuery,
+  useGetUsersQuery,
+  useUserProfileQuery,
+} from "../redux/apiServices/UserService";
+import { useQuery } from "react-query";
+import { queryClient } from "../redux/queryClient";
 
 function HomePage() {
   const navigation = useNavigate();
-  const dispatch = useDispatch();
-  const { auth, chat } = useSelector((state) => state);
-  // const token = localStorage.getItem("token");
-  const token = TOKEN;
+  const token = localStorage.getItem("token");
+  // const token = TOKEN;
   const [querys, setQuerys] = useState("");
   const [currentChat, setCurrentChat] = useState(false);
   const [content, setContent] = useState("");
   const [isUser, setIsUser] = useState(null);
   const [isGroup, setIsGroup] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState([]);
+  const [chatUserData, setChatUserData] = useState([]);
   const [chatData, setChatData] = useState(null);
   const [currUser, setCurrUser] = useState({});
-  const [myMessage, setMyMessage] = useState([])
+  const [myMessage, setMyMessage] = useState([]);
+  const [searchUser, setSearchUser] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
 
+  const { data: users } = useGetUsersQuery();
   const handleCurrentChat = async () => {
     setCurrentChat(true);
-    // try {
-    //   const response = await axios.get(
-    //     "http://localhost:8080/api/chats/single",
-
-    //     {
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //         Authorization: `Bearer ${token}`,
-    //       },
-    //     }
-    //   );
-    //   // console.log("chat user response : " , response.data)
-
-    // } catch (error) {
-    //   console.error("Error:", error);
-    // }
   };
 
-  const handleSearch = (keyword) => {
+  const handleSearch = async (keyword) => {
     setLoading(true);
-    dispatch(searchUser({ keyword, token }));
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/user/search?keyword=${keyword}`,
+        { content: content },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      // console.log("chat user response : " , response.data)
+      setSearchUser(response.data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
     setLoading(false);
   };
 
@@ -76,14 +82,11 @@ function HomePage() {
           },
         }
       );
-      // console.log("chat user response : " , response.data)
     } catch (error) {
       console.error("Error:", error);
     }
   };
 
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -97,22 +100,24 @@ function HomePage() {
 
   useEffect(() => {
     const allMessage = async () => {
-      if(currentChat.id){try {
-        const response = await axios.get(
-          `http://localhost:8080/api/message/chat/${currentChat.id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setMyMessage(response);
-        // console.log("user chat details : ", response.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        // setLoading(false);
-      }}
+      if (currentChat.id) {
+        try {
+          const response = await axios.get(
+            `http://localhost:8080/api/message/chat/${currentChat.id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          setMyMessage(response);
+          // console.log("user chat details : ", response.data);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        } finally {
+          // setLoading(false);
+        }
+      }
     };
     allMessage();
   }, [myMessage]);
@@ -129,7 +134,7 @@ function HomePage() {
           }
         );
         console.log(response.data);
-        setData(response.data);
+        setChatUserData(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -140,35 +145,42 @@ function HomePage() {
     fetchData();
   }, [token]);
 
-  useEffect(() => {
-    const userFetchData = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:8080/api/user/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        console.log(response.data);
-        setCurrUser(response.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        // setLoading(false);
-      }
-    };
-
-    userFetchData();
-  }, [token]);
-
   const handleUserCurrentChat = (item) => {
     console.log(item);
     setChatData(item);
   };
 
-  console.log("myMessage : " , myMessage )
+  const { data, error, isLoading } = useUserProfileQuery();
+
+  const [deleteUser] = useDeleteUserMutation();
+
+  // const deleteChatUser = (userId) => {
+  //   deleteUser(userId)
+  //     .unwrap()
+  //     .then(() => {
+  //       // Handle the successful deletion
+  //       console.log("User deleted successfully");
+  //     })
+  //     .catch((error) => {
+  //       // Handle the error
+  //       console.error("Error deleting user:", error);
+  //     });
+  // };
+
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
+
+  if (error) {
+    return <p>Error: {error.message}</p>;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  // console.log("users List : " , users)
+
   return (
     <div>
       <div className="py-14 bg-[#00a884] w-full"></div>
@@ -186,12 +198,12 @@ function HomePage() {
                   <img
                     className="rounded-full w-10 h-10 cursor-pointer"
                     src={
-                      currUser.profilePicture ||
+                      data.profilePicture ||
                       "https://cdn.pixabay.com/photo/2023/12/07/23/12/black-spotted-longhorn-beetle-8436478_1280.jpg"
                     }
                     alt=""
                   />
-                  <p>{currUser.username}</p>
+                  <p>{data.username || "User Name not found"}</p>
                 </div>
                 <div className="space-x-3 text-2xl flex">
                   <TbCircleDotted onClick={() => navigation("/status")} />
@@ -246,8 +258,8 @@ function HomePage() {
             {/* all user who is in the chat App */}
             <div className="bg-white overflow-y-scroll h-[76.8vh] px-3">
               {loading && <p>Loading...</p>}
-              {querys && data
-                ? auth?.searchUser?.map((item, index) => {
+              {querys && chatUserData
+                ? searchUser?.map((item, index) => {
                     return (
                       <div
                         key={index}
@@ -265,7 +277,7 @@ function HomePage() {
                     );
                   })
                 : !querys &&
-                  data.map((item, index) => (
+                  chatUserData.map((item, index) => (
                     <div
                       key={index}
                       onClick={() => {
@@ -369,7 +381,7 @@ function HomePage() {
               {/* message section */}
               <div className="px-10 h-[85vh] overflow-y-scroll w-[100%] bg-blue-200">
                 <div className="space-y-1 flex flex-col justify-center mt-20 py-2">
-                  {[1,1,1,1,1,1,1].map((item, i) => (
+                  {[1, 1, 1, 1, 1, 1, 1].map((item, i) => (
                     <MessageCard
                       key={i}
                       content={item}

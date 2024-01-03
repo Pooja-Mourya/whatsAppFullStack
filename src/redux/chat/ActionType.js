@@ -1,5 +1,0 @@
-export const CREATE_CHAT = "CREATE_CHAT"
-export const CREATE_CHAT_GROUP = "CREATE_CHAT_GROUP"
-export const CHAT_USERS = "CHAT_USERS"
-// export const SEARCH_USER = "SEARCH_USER"
-// export const UPDATE_USER = "UPDATE_USER"

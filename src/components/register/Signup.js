@@ -2,8 +2,7 @@ import { Alert, Button, Snackbar } from "@mui/material";
 import { green } from "@mui/material/colors";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { httpsService } from "../../config/Api";
-import axios from "axios";
+import { useAddUserMutation } from "../../redux/apiServices/AuthService";
 
 function Signup() {
   const navigate = useNavigate();
@@ -12,26 +11,35 @@ function Signup() {
     password: "",
     email: "",
   });
-  const [loading, setLoading] = useState(false);
   const [openSnackBar, setOpenSnackBar] = useState(false);
-  const [data, setData] = useState();
+  const [apiError, setApiError] = useState("");
+
+  const [addUser, { isLoading, isError, isSuccess }] = useAddUserMutation();
+
+  const handleApiError = (error) => {
+    setApiError(error.message);
+    console.error("API Error:", error.message);
+    if (error.response && error.response.status === 401) {
+      console.error("Unauthorized access!");
+    }
+  };
+
+  console.log("apiError : ", apiError);
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    // e.preventDefault();
     setOpenSnackBar(true);
+
     try {
-      setLoading(true);
-      const response = await axios.post(
-        "http://localhost:8080/api/auth/signup",
-        { ...inputData, }
-      );
-      console.log("signup response : ", response);
-      setLoading(false);
+      const newUser = {
+        ...inputData,
+      };
+      await addUser(newUser);
       setInputData({ email: "", password: "", username: "" });
-      if (response) {
-        navigate("/signIn");
-      }
+
+      console.log("User added successfully!");
     } catch (error) {
-      console.log("error : ", error);
+      console.error("Failed to add user:", error);
+      handleApiError(error);
     }
   };
 
@@ -44,13 +52,18 @@ function Signup() {
     setOpenSnackBar(!openSnackBar);
   };
 
-  loading && <p>Loading...</p>
   return (
     <div>
       <div className="flex justify-center h-screen items-center">
         <div className="w-[30%] p-10 shadow-md bg-white">
-
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form
+            onSubmit={() =>
+            !inputData?.email && !inputData?.password
+                ? handleApiError()
+                : handleSubmit()
+            }
+            className="space-y-5"
+          >
             <div>
               <p className="md-2">User Name</p>
               <input
@@ -62,6 +75,7 @@ function Signup() {
                 className="py-2 outline outline-green-600 w-full rounded-md border"
               />
             </div>
+            <h6 style={{ color: "red" }}>{apiError}</h6>
             <div>
               <p className="md-2">Email</p>
               <input
@@ -91,8 +105,8 @@ function Signup() {
                 type="submit"
                 sx={{ backgroundColor: green[900], padding: ".5rem 0rem" }}
               >
-                {" "}
-                Sign Up{" "}
+                {/* {isLoading ? "Signing up..." : "Sign Up"} */}
+                Sign Up
               </Button>
             </div>
             <div className="flex space-x-5 items-center mt-5">
@@ -109,7 +123,8 @@ function Signup() {
           </form>
         </div>
       </div>
-      {data ? (
+      {isError && <h1>{isError.message}</h1>}
+      {isSuccess ? (
         <Snackbar
           open={openSnackBar}
           autoHideDuration={6000}

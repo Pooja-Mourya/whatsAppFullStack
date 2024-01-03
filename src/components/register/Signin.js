@@ -2,43 +2,31 @@ import { Alert, Button, Snackbar } from "@mui/material";
 import { green } from "@mui/material/colors";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { httpsService } from "../../config/Api";
-import { Constants } from "../../config/Constants";
-import axios from "axios";
+import { useLoginUserMutation } from "../../redux/apiServices/AuthService";
 
 function Signin() {
   const navigate = useNavigate();
   const [inputData, setInputData] = useState({ email: "", password: "" });
   const [openSnackBar, setOpenSnackBar] = useState(false);
-  const [userToken, setUserToken] = useState();
+  const [token, setToken] = useState(null)
+
+  const [loginUser] = useLoginUserMutation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setOpenSnackBar(true);
-    // httpsService({
-    //   method: "POST",
-    //   path: Constants.apiEndPoint.signIn,
-    //   data: inputData,
-    //   success: (result) => {
-    //     localStorage.setItem("token", result?.jwt);
-    //     setUserToken(result);
-    //   },
-    //   error: (error) => console.log("error : ", error),
-    // });
     try {
-      const response = await axios.post(
-        "http://localhost:8080/api/auth/login",
-        { inputData }
-      );
-      // console.log("response token : ", response.data.jwt);
-      localStorage.setItem("token", response.data.jwt);
-      setUserToken(response.data.jwt);
+      const response = await loginUser(inputData);
+      if (response.data && response.data.jwt) {
+        localStorage.setItem("token", response.data.jwt);
+        setToken(response.data.jwt);
+      }
+      
       setInputData({ email: "", password: "" });
      
-        navigate("/");
-      
+      navigate("/");
     } catch (error) {
-      console.log("error : ", error);
+      console.error('Login failed:', error);
     }
   };
 
@@ -99,7 +87,7 @@ function Signin() {
           </form>
         </div>
       </div>
-      {userToken ? (
+      {token ? (
         <Snackbar
           open={openSnackBar}
           autoHideDuration={6000}

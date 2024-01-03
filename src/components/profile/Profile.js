@@ -5,19 +5,21 @@ import { httpsService, TOKEN } from "../../config/Api";
 import { Constants } from "../../config/Constants";
 import axios from "axios";
 import { Alert, Snackbar } from "@mui/material";
+import { useUpdateUserMutation, useUserProfileQuery } from "../../redux/apiServices/UserService";
 
 function Profile() {
   const navigate = useNavigate();
   const [flag, setFlag] = useState();
   const [inputValue, setInputValue] = useState("");
-  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [update, setUpdate] = useState();
   const [imageUpload, setImageUpload] = useState("");
   const [profileError, setProfileError] = useState(" ");
   const [openSnackBar, setOpenSnackBar] = useState(false);
 
-  // const token = localStorage.getItem("token");
+  const { data } = useUserProfileQuery();
+  const [updateUser] = useUpdateUserMutation();
+
   const token = TOKEN;
 
   // console.log("token : ", token);
@@ -27,30 +29,21 @@ function Profile() {
   };
 
   const handleUpdateProfile = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.put(
-        "http://localhost:8080/api/user/update",
-        {
-          displayName: inputValue,
-          profilePicture:imageUpload
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setUpdate(response.message);
-      console.log("Update Profile Response:", response.data);
-    } catch (error) {
-      console.error("Error updating profile:", error);
-    } finally {
-      setLoading(false);
-    }
+    updateUser({
+      displayName: inputValue,
+      profilePicture: imageUpload,
+    })
+      .unwrap()
+      .then((updatedUser) => {
+        // Handle the updated user data
+        console.log("User updated:", updatedUser);
+      })
+      .catch((error) => {
+        // Handle the error
+        console.error("Error updating user:", error);
+      });
   };
 
-  
   const handleImageUpload = async (e) => {
     try {
       const formData = new FormData();
@@ -67,7 +60,7 @@ function Profile() {
         },
         success: (imageData) => {
           setImageUpload(imageData.fileDownloadUri);
-          handleUpdateProfile()
+          handleUpdateProfile();
           // console.log("imageData------", imageData);
         },
         error: (err) => {
@@ -82,29 +75,6 @@ function Profile() {
   };
 
   console.log("state ", imageUpload);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:8080/api/user/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setData(response.data);
-      } catch (error) {
-        setProfileError(error.message);
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [token]);
 
   if (loading) {
     return <p>Loading...</p>;
@@ -203,7 +173,9 @@ function Profile() {
         User registered successfully!
       </Alert>
     </Snackbar>} */}
-    {profileError && <h1 style={{color:"orange"}}>user not found exception</h1>}
+      {profileError && (
+        <h1 style={{ color: "orange" }}>user not found exception</h1>
+      )}
     </div>
   );
 }

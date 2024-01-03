@@ -10,8 +10,8 @@ import Profile from "./components/profile/Profile";
 import { TOKEN } from "./config/Api";
 
 function App() {
-  // const token = localStorage.getItem("token");
-  const token = TOKEN
+  const token = localStorage.getItem("token");
+  // const token = TOKEN
   const navigate = useNavigate();
   useEffect(() => {
     if (!token) {
@@ -32,4 +32,4 @@ function App() {
   );
 }
 
-export default App;
+export default App
