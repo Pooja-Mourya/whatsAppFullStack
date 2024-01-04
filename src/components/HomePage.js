@@ -21,6 +21,8 @@ import {
 } from "../redux/apiServices/UserService";
 import { useQuery } from "react-query";
 import { queryClient } from "../redux/queryClient";
+import SockJS from "sockjs-client/dist/sockjs";
+import { over } from "stompjs";
 
 function HomePage() {
   const navigation = useNavigate();
@@ -38,9 +40,51 @@ function HomePage() {
   const [myMessage, setMyMessage] = useState([]);
   const [searchUser, setSearchUser] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [stompClient, setStompClient] = useState()
+  const [isConnect, setIsConnect] = useState(false)
   const open = Boolean(anchorEl);
 
+  const connection = () =>{
+    const stomp = new SockJS("http://localhost:8080/websocket-endpoint")
+    const temp = over(stomp)
+    setStompClient(temp)
+
+    headers = {
+      Authorization: `Bearer ${token}`,
+      "X-XSRF-TOKEN": getCookie("XSRF-TOKEN"),
+    }
+
+  }
+
+  function getCookie(name) {
+    const cookies = document.cookie.split(';');
+    
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      
+      // Check if the cookie starts with the specified name
+      if (cookie.startsWith(name + '=')) {
+        return cookie.substring(name.length + 1);
+      }
+    }
+  
+    return null; // Cookie not found
+  }
+  
+  // Example usage to get the XSRF-TOKEN value
+  const xsrfToken = getCookie('XSRF-TOKEN');
+  console.log(xsrfToken);
+  
+  const onError = (error) =>{
+    console.log("web-socket error : ", error)
+  }
+
+  const onConnect = () =>{
+    setIsConnect(true)
+  }
+  
   const { data: users } = useGetUsersQuery();
+  
   const handleCurrentChat = async () => {
     setCurrentChat(true);
   };
